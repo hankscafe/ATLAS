@@ -377,11 +377,11 @@ class IIQConnector:
             # Get open ticket count
             # Get open ticket count - use broad list of statuses
             open_statuses = [
-                "Open", "New", "In Progress", "Assigned", "Reopened", "Oh Hold", 
+                "Open", "New", "In Progress", "Assigned", "Reopened", "On Hold", 
                 "Waiting on Requestor", "Waiting on Vendor", "Parts Ordered", 
                 "Submitted", "Pending", "Scheduled", "Received", "Waiting on Advantech",
                 "Waiting on Assurance", "Waiting on CDWG", "Waiting on Classlink",
-                "Waiting on Dell", "Waiting on DOE", "Waiting on DTI", "Waiting on Hilyaords",
+                "Waiting on Dell", "Waiting on DOE", "Waiting on DTI", "Waiting on Hilyard's",
                 "Waiting on Infinite Campus"
             ]
             
@@ -390,7 +390,6 @@ class IIQConnector:
                 headers=self.headers,
                 json={
                     "OnlyShowDeleted": False,
-                    "Filters": [{"Facet": "Status", "Values": ["Open"]}],
                     "Filters": [{"Facet": "Status", "Values": open_statuses}],
                     "Paging": {"PageIndex": 0, "PageSize": 1}
                 },
