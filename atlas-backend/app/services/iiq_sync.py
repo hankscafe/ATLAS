@@ -358,6 +358,8 @@ class IIQConnector:
         Called during nightly sync to avoid live API calls on dashboard load.
         """
         from app.models import CachedStats
+        from app.models import CachedStats, IIQTicket
+        from sqlalchemy import func
         import json
 
         logger.info("Caching IIQ ticket statistics...")
@@ -373,12 +375,23 @@ class IIQConnector:
             total_all_time = resp.json().get("Paging", {}).get("TotalRows", 0)
 
             # Get open ticket count
+            # Get open ticket count - use broad list of statuses
+            open_statuses = [
+                "Open", "New", "In Progress", "Assigned", "Reopened", "Oh Hold", 
+                "Waiting on Requestor", "Waiting on Vendor", "Parts Ordered", 
+                "Submitted", "Pending", "Scheduled", "Received", "Waiting on Advantech",
+                "Waiting on Assurance", "Waiting on CDWG", "Waiting on Classlink",
+                "Waiting on Dell", "Waiting on DOE", "Waiting on DTI", "Waiting on Hilyaords",
+                "Waiting on Infinite Campus"
+            ]
+            
             resp = requests.post(
                 f"{self.base_url}/api/v1.0/tickets",
                 headers=self.headers,
                 json={
                     "OnlyShowDeleted": False,
                     "Filters": [{"Facet": "Status", "Values": ["Open"]}],
+                    "Filters": [{"Facet": "Status", "Values": open_statuses}],
                     "Paging": {"PageIndex": 0, "PageSize": 1}
                 },
                 timeout=30
@@ -399,6 +412,12 @@ class IIQConnector:
                 for item in items:
                     if item.get("CreatedDate", "") >= school_year_start:
                         school_year_count += 1
+            # Calculate school year tickets from local DB (since we sync from Jan 1st)
+            # This is faster and more accurate than sampling the API
+            school_year_start = datetime(2025, 7, 1)
+            school_year_count = db.query(func.count(IIQTicket.ticket_id)).filter(
+                IIQTicket.created_date >= school_year_start
+            ).scalar() or 0
 
             # Save to cache
             stats = {
