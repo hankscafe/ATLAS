@@ -373,20 +373,13 @@ class IIQConnector:
             )
             total_all_time = resp.json().get("Paging", {}).get("TotalRows", 0)
 
-            # Get open ticket count using specific Status UUIDs provided by user
-            # These correspond to all non-closed, non-deleted statuses in the IIQ instance
-            open_status_ids = [
-                "888a2b63-7bf4-49f9-a2a3-ea739e001001", # Draft
-                "888a2b63-7bf4-49f9-a2a3-ea739e001002", # Awaiting Approval
-                "c7932b63-7bf4-49f9-a2a3-ea739e7e0001", # Submitted
-                "c7932b63-7bf4-49f9-a2a3-ea739e7e0002", # In Progress
-                "c7932b63-7bf4-49f9-a2a3-ea739e7e0003", # Waiting on Requestor
-                "c7932b63-7bf4-49f9-a2a3-ea739e7e0006", # Waiting on Vendor
-                "c7932b63-7bf4-49f9-a2a3-ea739e7e0007", # Waiting on DOE
-                "c7932b63-7bf4-49f9-a2a3-ea739e7e0008", # DOE Will Relieve
-                "c7932b63-7bf4-49f9-a2a3-ea739e7e0009", # In Repair (Vendor)
-                "c7932b63-7bf4-49f9-a2a3-ea739e7e0010", # On Hold
-                "c7932b63-7bf4-49f9-a2a3-ea739e7e0015"  # Waiting on Department
+            # Get open ticket count using Status Names derived from the API response
+            # WorkflowStep facet typically expects names, not UUIDs
+            open_status_names = [
+                "Draft", "Awaiting Approval", "Submitted", "In Progress",
+                "Waiting on Requestor", "Waiting on Vendor", "Waiting on DOE",
+                "DOE Will Relieve", "In Repair (Vendor)", "On Hold",
+                "Waiting on Department"
             ]
 
             resp = requests.post(
@@ -394,7 +387,7 @@ class IIQConnector:
                 headers=self.headers,
                 json={
                     "OnlyShowDeleted": False,
-                    "Filters": [{"Facet": "WorkflowStep", "Values": open_status_ids}],
+                    "Filters": [{"Facet": "WorkflowStep", "Values": open_status_names}],
                     "Paging": {"PageIndex": 0, "PageSize": 1}
                 },
                 timeout=30
