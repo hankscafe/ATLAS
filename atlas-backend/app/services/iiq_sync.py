@@ -373,14 +373,28 @@ class IIQConnector:
             )
             total_all_time = resp.json().get("Paging", {}).get("TotalRows", 0)
 
-            # Get open ticket count using StatusType facet
-            # This captures ALL open tickets (New, In Progress, etc.) and is portable across IIQ instances
+            # Get open ticket count using specific Status UUIDs provided by user
+            # These correspond to all non-closed, non-deleted statuses in the IIQ instance
+            open_status_ids = [
+                "888a2b63-7bf4-49f9-a2a3-ea739e001001", # Draft
+                "888a2b63-7bf4-49f9-a2a3-ea739e001002", # Awaiting Approval
+                "c7932b63-7bf4-49f9-a2a3-ea739e7e0001", # Submitted
+                "c7932b63-7bf4-49f9-a2a3-ea739e7e0002", # In Progress
+                "c7932b63-7bf4-49f9-a2a3-ea739e7e0003", # Waiting on Requestor
+                "c7932b63-7bf4-49f9-a2a3-ea739e7e0006", # Waiting on Vendor
+                "c7932b63-7bf4-49f9-a2a3-ea739e7e0007", # Waiting on DOE
+                "c7932b63-7bf4-49f9-a2a3-ea739e7e0008", # DOE Will Relieve
+                "c7932b63-7bf4-49f9-a2a3-ea739e7e0009", # In Repair (Vendor)
+                "c7932b63-7bf4-49f9-a2a3-ea739e7e0010", # On Hold
+                "c7932b63-7bf4-49f9-a2a3-ea739e7e0015"  # Waiting on Department
+            ]
+
             resp = requests.post(
                 f"{self.base_url}/api/v1.0/tickets",
                 headers=self.headers,
                 json={
                     "OnlyShowDeleted": False,
-                    "Filters": [{"Facet": "StatusType", "Values": ["Open"]}],
+                    "Filters": [{"Facet": "Status", "Values": open_status_ids}],
                     "Paging": {"PageIndex": 0, "PageSize": 1}
                 },
                 timeout=30
