@@ -394,7 +394,7 @@ class IIQConnector:
                 headers=self.headers,
                 json={
                     "OnlyShowDeleted": False,
-                    "Filters": [{"Facet": "TicketStatusTypeId", "Values": open_status_ids}],
+                    "Filters": [{"Facet": "StatusType", "Values": open_status_ids}],
                     "Paging": {"PageIndex": 0, "PageSize": 1}
                 },
                 timeout=30
