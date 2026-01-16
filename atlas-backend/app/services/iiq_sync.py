@@ -373,21 +373,14 @@ class IIQConnector:
             )
             total_all_time = resp.json().get("Paging", {}).get("TotalRows", 0)
 
-            # Get open ticket count using specific Status values provided by user
-            open_statuses = [
-                "In Progress", "In Repair (Vendor)", "On Hold", "Received", "Submitted",
-                "Waiting on Advantech", "Waiting on Assurance", "Waiting on Canon",
-                "Waiting on CDWG", "Waiting on Classlink", "Waiting on Dell",
-                "Waiting on DOE", "Waiting on DTI", "Waiting on Hilyard's",
-                "Waiting on Infinite Campus", "Waiting on Requestor", "Waiting on Vendor"
-            ]
-
+            # Get open ticket count using StatusType facet
+            # This captures ALL open tickets (New, In Progress, etc.) and is portable across IIQ instances
             resp = requests.post(
                 f"{self.base_url}/api/v1.0/tickets",
                 headers=self.headers,
                 json={
                     "OnlyShowDeleted": False,
-                    "Filters": [{"Facet": "Status", "Values": open_statuses}],
+                    "Filters": [{"Facet": "StatusType", "Values": ["Open"]}],
                     "Paging": {"PageIndex": 0, "PageSize": 1}
                 },
                 timeout=30
