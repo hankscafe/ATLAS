@@ -373,13 +373,19 @@ class IIQConnector:
             )
             total_all_time = resp.json().get("Paging", {}).get("TotalRows", 0)
 
-            # Get open ticket count using Status Names derived from the API response
-            # WorkflowStep facet typically expects names, not UUIDs
-            open_status_names = [
-                "Draft", "Awaiting Approval", "Submitted", "In Progress",
-                "Waiting on Requestor", "Waiting on Vendor", "Waiting on DOE",
-                "DOE Will Relieve", "In Repair (Vendor)", "On Hold",
-                "Waiting on Department"
+            # Fetch all statuses to identify "Open" ones dynamically
+            status_resp = requests.get(
+                f"{self.base_url}/api/v1.0/tickets/statuses",
+                headers=self.headers,
+                timeout=15
+            )
+            status_resp.raise_for_status()
+            all_statuses = status_resp.json().get("Items", [])
+            
+            open_status_ids = [
+                s["TicketStatusTypeId"] 
+                for s in all_statuses 
+                if not s.get("IsClosed") and not s.get("IsDeleted")
             ]
 
             resp = requests.post(
@@ -387,7 +393,7 @@ class IIQConnector:
                 headers=self.headers,
                 json={
                     "OnlyShowDeleted": False,
-                    "Filters": [{"Facet": "WorkflowStep", "Values": open_status_names}],
+                    "Filters": [{"Facet": "Status", "Values": open_status_ids}],
                     "Paging": {"PageIndex": 0, "PageSize": 1}
                 },
                 timeout=30
