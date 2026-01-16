@@ -382,18 +382,20 @@ class IIQConnector:
             status_resp.raise_for_status()
             all_statuses = status_resp.json().get("Items", [])
             
-            open_status_ids = [
-                s["TicketStatusTypeId"] 
+            open_status_names = [
+                s["StatusName"] 
                 for s in all_statuses 
                 if not s.get("IsClosed") and not s.get("IsDeleted")
             ]
+            
+            logger.info(f"Filtering tickets by open statuses: {open_status_names}")
 
             resp = requests.post(
                 f"{self.base_url}/api/v1.0/tickets",
                 headers=self.headers,
                 json={
                     "OnlyShowDeleted": False,
-                    "Filters": [{"Facet": "Status", "Values": open_status_ids}],
+                    "Filters": [{"Facet": "Status", "Values": open_status_names}],
                     "Paging": {"PageIndex": 0, "PageSize": 1}
                 },
                 timeout=30
